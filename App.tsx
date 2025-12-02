@@ -192,6 +192,18 @@ export default function App() {
     );
   }
 
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to reset? All current progress will be lost.')) {
+      // Deep copy INITIAL_DATA to ensure a clean reset
+      const cleanData = JSON.parse(JSON.stringify(INITIAL_DATA));
+      setCategories(cleanData);
+      setMetadata(null);
+      setProjectType(null);
+      setShowResultPage(false);
+      setIsAnalyzing(false);
+    }
+  };
+
   // Selection Screen
   if (!projectType) {
     return (
@@ -276,7 +288,7 @@ export default function App() {
             </div>
 
             <button
-              onClick={() => setProjectType(null)}
+              onClick={handleReset}
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors"
               title="Change Project Type"
             >
