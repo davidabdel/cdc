@@ -20,6 +20,10 @@ export default function App() {
   const [showResultPage, setShowResultPage] = useState(false);
   const [metadata, setMetadata] = useState<ProjectMetadata | null>(null);
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState(false);
+
   // Derive visible categories based on project type
   const visibleCategories = React.useMemo(() => {
     if (projectType === 'POOL') return categories;
@@ -126,6 +130,53 @@ export default function App() {
     return criteria.every(id => findStatus(id) === ComplianceStatus.COMPLIANT);
   }, [visibleCategories]);
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === '1914') {
+      setIsAuthenticated(true);
+      setLoginError(false);
+    } else {
+      setLoginError(true);
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
+          <div className="flex flex-col items-center gap-3">
+            <div className="bg-indigo-100 p-4 rounded-full">
+               <ShieldCheck size={40} className="text-indigo-700" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome</h1>
+            <p className="text-gray-500 text-center">Please enter the access code to continue.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                placeholder="Enter access code"
+                autoFocus
+              />
+              {loginError && (
+                <p className="text-red-500 text-sm mt-2 ml-1">Incorrect access code. Please try again.</p>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-colors shadow-md hover:shadow-lg"
+            >
+              Enter
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   // Selection Screen
   if (!projectType) {
