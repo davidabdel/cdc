@@ -25,6 +25,20 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
     day: 'numeric'
   });
 
+  // Update document title for printing
+  React.useEffect(() => {
+    const originalTitle = document.title;
+    if (metadata?.ownerName || metadata?.address) {
+      const parts = ['CDC Report'];
+      if (metadata.ownerName) parts.push(metadata.ownerName);
+      if (metadata.address) parts.push(metadata.address);
+      document.title = parts.join(' - ');
+    }
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [metadata]);
+
   // Calculate overall compliance
   const criticalChecks = [
     'sec_10_7_complying_dev',
