@@ -39,7 +39,7 @@ export default function App() {
   const updateItemStatus = (itemId: string, newStatus: ComplianceStatus) => {
     setCategories(prev => prev.map(cat => ({
       ...cat,
-      items: cat.items.map(item => 
+      items: cat.items.map(item =>
         item.id === itemId ? { ...item, status: newStatus } : item
       )
     })));
@@ -48,7 +48,7 @@ export default function App() {
   const updateItemNotes = (itemId: string, newNotes: string) => {
     setCategories(prev => prev.map(cat => ({
       ...cat,
-      items: cat.items.map(item => 
+      items: cat.items.map(item =>
         item.id === itemId ? { ...item, notes: newNotes } : item
       )
     })));
@@ -59,7 +59,7 @@ export default function App() {
     try {
       // Pass the visible structure to the AI
       const response = await analyzeChecklistWithDocuments(files, visibleCategories);
-      
+
       if (response) {
         // Update Metadata
         if (response.metadata) {
@@ -93,13 +93,13 @@ export default function App() {
   };
 
   const handleExport = () => {
-      const dataStr = JSON.stringify({ metadata, categories: visibleCategories }, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      const exportFileDefaultName = `cdc-checklist-${projectType?.toLowerCase() || 'export'}.json`;
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
+    const dataStr = JSON.stringify({ metadata, categories: visibleCategories }, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `cdc-checklist-${projectType?.toLowerCase() || 'export'}.json`;
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   };
 
   // Logic to determine if "CDC Approved" report is available
@@ -109,25 +109,34 @@ export default function App() {
   // 3. lot_size_normal = COMPLIANT
   // 4. zoning_check = COMPLIANT
   // 5. flood_info = COMPLIANT
-  
-  const canShowApprovalReport = React.useMemo(() => {
+
+  // Logic to determine if "CDC Approved" report is available
+  // Requirements: 
+  // 1. sec_10_7_complying_dev = COMPLIANT
+  // 2. sec_10_7_bushfire = COMPLIANT
+  // 3. lot_size_normal = COMPLIANT
+  // 4. zoning_check = COMPLIANT
+  // 5. flood_info = COMPLIANT
+
+  const canShowResultPage = React.useMemo(() => {
     const findStatus = (id: string) => {
-        for (const cat of visibleCategories) {
-            const item = cat.items.find(i => i.id === id);
-            if (item) return item.status;
-        }
-        return ComplianceStatus.PENDING;
+      for (const cat of visibleCategories) {
+        const item = cat.items.find(i => i.id === id);
+        if (item) return item.status;
+      }
+      return ComplianceStatus.PENDING;
     };
 
     const criteria = [
-        'sec_10_7_complying_dev',
-        'sec_10_7_bushfire',
-        'lot_size_normal',
-        'zoning_check',
-        'flood_info'
+      'sec_10_7_complying_dev',
+      'sec_10_7_bushfire',
+      'lot_size_normal',
+      'zoning_check',
+      'flood_info'
     ];
 
-    return criteria.every(id => findStatus(id) === ComplianceStatus.COMPLIANT);
+    // Show report if all critical items have been assessed (i.e., not PENDING)
+    return criteria.every(id => findStatus(id) !== ComplianceStatus.PENDING);
   }, [visibleCategories]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -146,7 +155,7 @@ export default function App() {
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <div className="flex flex-col items-center gap-3">
             <div className="bg-indigo-100 p-4 rounded-full">
-               <ShieldCheck size={40} className="text-indigo-700" />
+              <ShieldCheck size={40} className="text-indigo-700" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Welcome</h1>
             <p className="text-gray-500 text-center">Please enter the access code to continue.</p>
@@ -185,7 +194,7 @@ export default function App() {
         <div className="max-w-3xl w-full text-center space-y-8">
           <div className="flex flex-col items-center gap-3 mb-8">
             <div className="bg-indigo-100 p-4 rounded-full">
-               <ShieldCheck size={48} className="text-indigo-700" />
+              <ShieldCheck size={48} className="text-indigo-700" />
             </div>
             <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Sydney CDC Compliance Check</h1>
             <p className="text-xl text-gray-600 max-w-lg mx-auto">
@@ -194,7 +203,7 @@ export default function App() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 w-full">
-            <button 
+            <button
               onClick={() => setProjectType('POOL')}
               className="group relative flex flex-col items-center px-8 pt-8 pb-20 bg-white rounded-2xl shadow-sm border-2 border-transparent hover:border-indigo-600 hover:shadow-xl transition-all duration-300"
             >
@@ -210,18 +219,18 @@ export default function App() {
               </div>
             </button>
 
-            <button 
+            <button
               onClick={() => setProjectType('SPA')}
               className="group relative flex flex-col items-center px-8 pt-8 pb-20 bg-white rounded-2xl shadow-sm border-2 border-transparent hover:border-indigo-600 hover:shadow-xl transition-all duration-300"
             >
-               <div className="w-20 h-20 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-20 h-20 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Box size={40} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Above Ground Spa / Swim Spa</h3>
               <p className="text-gray-500 text-center">
                 Portable or fixed above-ground units with minimal excavation requirements.
               </p>
-               <div className="absolute bottom-8 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-600 font-medium flex items-center gap-1">
+              <div className="absolute bottom-8 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-600 font-medium flex items-center gap-1">
                 Start Assessment <ChevronRight size={16} />
               </div>
             </button>
@@ -234,10 +243,10 @@ export default function App() {
   // Result Page
   if (showResultPage) {
     return (
-      <ResultPage 
-        categories={visibleCategories} 
-        projectType={projectType} 
-        onBack={() => setShowResultPage(false)} 
+      <ResultPage
+        categories={visibleCategories}
+        projectType={projectType}
+        onBack={() => setShowResultPage(false)}
         metadata={metadata}
       />
     );
@@ -254,28 +263,28 @@ export default function App() {
             <h1 className="text-xl font-extrabold tracking-tight hidden sm:block">Sydney CDC Compliance Check</h1>
             <h1 className="text-xl font-extrabold tracking-tight sm:hidden">Sydney CDC Check</h1>
           </div>
-          
-          <div className="flex items-center gap-3">
-             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider border border-indigo-100">
-                {projectType === 'POOL' ? <Waves size={14} /> : <Box size={14} />}
-                {projectType === 'POOL' ? 'Pool / Inground' : 'Above Ground Spa'}
-             </div>
 
-            <button 
-                onClick={() => setProjectType(null)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors"
-                title="Change Project Type"
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider border border-indigo-100">
+              {projectType === 'POOL' ? <Waves size={14} /> : <Box size={14} />}
+              {projectType === 'POOL' ? 'Pool / Inground' : 'Above Ground Spa'}
+            </div>
+
+            <button
+              onClick={() => setProjectType(null)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors"
+              title="Change Project Type"
             >
-                <RotateCcw size={16} />
-                <span className="hidden sm:inline">Reset</span>
+              <RotateCcw size={16} />
+              <span className="hidden sm:inline">Reset</span>
             </button>
 
-            <button 
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
             >
-                <Download size={16} />
-                <span className="hidden sm:inline">Export</span>
+              <Download size={16} />
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </div>
@@ -290,18 +299,18 @@ export default function App() {
               Verify compliance for <strong>{projectType === 'POOL' ? 'Swimming Pools & Inground Spas' : 'Above Ground Spas & Swim Spas'}</strong> against NSW standards.
             </p>
           </div>
-          
-          {canShowApprovalReport && (
-              <button 
-                onClick={() => setShowResultPage(true)}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-lg shadow-emerald-200 font-bold flex items-center gap-2 animate-bounce-slow transition-all transform hover:scale-105"
-              >
-                  <FileCheck size={20} />
-                  View Approval Report
-              </button>
+
+          {canShowResultPage && (
+            <button
+              onClick={() => setShowResultPage(true)}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-lg shadow-emerald-200 font-bold flex items-center gap-2 animate-bounce-slow transition-all transform hover:scale-105"
+            >
+              <FileCheck size={20} />
+              View Compliance Report
+            </button>
           )}
         </div>
-        
+
         <FileUploader onAnalyze={handleDocumentAnalysis} isAnalyzing={isAnalyzing} />
 
         {/* Progress */}
@@ -310,13 +319,24 @@ export default function App() {
         {/* Checklist */}
         <div className="space-y-6">
           {visibleCategories.map(category => (
-            <ChecklistSection 
-              key={category.id} 
-              category={category} 
+            <ChecklistSection
+              key={category.id}
+              category={category}
               onUpdateStatus={updateItemStatus}
               onUpdateNotes={updateItemNotes}
             />
           ))}
+        </div>
+
+        {/* Bottom Action */}
+        <div className="mt-12 flex justify-center">
+          <button
+            onClick={() => setShowResultPage(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl shadow-lg shadow-indigo-200 font-bold text-lg flex items-center gap-3 transition-all transform hover:scale-105"
+          >
+            <FileCheck size={24} />
+            Generate Report
+          </button>
         </div>
       </main>
 
