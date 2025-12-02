@@ -36,6 +36,11 @@ export default function App() {
     return [];
   }, [categories, projectType]);
 
+  // Scroll to top on navigation changes
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [isAuthenticated, projectType, showResultPage]);
+
   const updateItemStatus = (itemId: string, newStatus: ComplianceStatus) => {
     setCategories(prev => prev.map(cat => ({
       ...cat,
