@@ -36,7 +36,7 @@ export const sendMessageToGemini = async (message: string): Promise<string> => {
   }
 
   if (!chatSession) {
-      throw new Error("Failed to initialize chat session.");
+    throw new Error("Failed to initialize chat session.");
   }
 
   try {
@@ -88,6 +88,21 @@ export const analyzeChecklistWithDocuments = async (
     2. For item 'sec_10_7_bushfire': Look specifically for the phrase "None of the land is bushfire prone land" or "NO" next to Bushfire Prone Land.
        - If the land is NOT bushfire prone, mark as COMPLIANT.
        - If the land IS bushfire prone, mark as NEEDS_CONSULTATION (or NON_COMPLIANT if strict).
+
+    3. For item 'section_10_7' (General Flags) - Acid Sulfate Soils:
+       - Look for "Acid Sulfate Soils" or similar text.
+       - If Class 3 or Class 4: Mark as COMPLIANT, but MUST add note: "Restriction: Cannot dig deeper than 1m".
+       - If Class 5: Mark as COMPLIANT.
+       - If Class 1 or Class 2: Mark as NON_COMPLIANT.
+       - If identified as containing Acid Sulfate Soils but NO Class is specified: Mark as NEEDS_CONSULTATION and note "Pass subject to manual check".
+       - If NOT identified as containing Acid Sulfate Soils: Mark as COMPLIANT (unless other flags exist).
+
+    4. For item '88b' (88b Restrictions):
+       - If the 88b instrument lists restrictions (e.g. "Restrictions on the Use of Land"), you MUST extract the text/description of each relevant restriction.
+       - Do NOT just list the item numbers (e.g. "Items 12, 14").
+       - Format as: "Item [Number]: [Brief Description of Restriction]".
+       - Example: "Item 12: No fence to be erected within the easement area."
+       - If there are many, summarize the key ones relevant to development (easements, building zones, etc.).
     
     For each item in the checklist:
     1. Search the documents for evidence (e.g., setbacks shown on plans, zoning on certificate).

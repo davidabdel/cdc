@@ -45,7 +45,8 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
     'sec_10_7_bushfire',
     'lot_size_normal',
     'zoning_check',
-    'flood_info'
+    'flood_info',
+    'section_10_7'
   ];
 
   const failedChecks = React.useMemo(() => {
@@ -53,7 +54,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
 
     categories.forEach(cat => {
       cat.items.forEach(item => {
-        if (criticalChecks.includes(item.id) && item.status !== ComplianceStatus.COMPLIANT) {
+        if (criticalChecks.includes(item.id) && item.status === ComplianceStatus.NON_COMPLIANT) {
           failures.push({
             id: item.id,
             text: item.text,
@@ -67,6 +68,12 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
   }, [categories]);
 
   const isCompliant = failedChecks.length === 0;
+
+  const hasChecks = React.useMemo(() => {
+    return categories.some(cat =>
+      cat.items.some(item => item.status === ComplianceStatus.NEEDS_CONSULTATION)
+    );
+  }, [categories]);
 
   return (
     <>
@@ -183,9 +190,11 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Result</p>
-                <p className={`text-lg font-bold flex items-center gap-2 ${isCompliant ? 'text-emerald-600' : 'text-red-600'}`}>
+                <p className={`font-bold flex items-center gap-2 ${isCompliant ? 'text-emerald-600' : 'text-red-600'} ${isCompliant && hasChecks ? 'text-sm' : 'text-lg'}`}>
                   {isCompliant ? <FileCheck size={18} /> : <div className="font-bold">X</div>}
-                  {isCompliant ? 'Pass' : 'Fail'}
+                  {isCompliant
+                    ? (hasChecks ? 'Passed Subject to checks being passed' : 'Pass')
+                    : 'Fail'}
                 </p>
               </div>
             </div>
@@ -339,8 +348,12 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
           <div className={`w-1/3 rounded-lg p-4 flex flex-col items-center justify-center border-2 
               ${isCompliant ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'}`}>
             {isCompliant ? <CheckCircle size={32} className="mb-2" /> : <div className="text-3xl font-bold mb-2">X</div>}
-            <span className="text-xl font-extrabold uppercase tracking-tight">{isCompliant ? 'PASSED' : 'FAILED'}</span>
-            <span className="text-[10px] uppercase tracking-wider opacity-75">Preliminary Assessment</span>
+            <span className={`font-extrabold uppercase tracking-tight text-center ${isCompliant && hasChecks ? 'text-sm' : 'text-xl'}`}>
+              {isCompliant
+                ? (hasChecks ? 'Passed Subject to checks being passed' : 'PASSED')
+                : 'FAILED'}
+            </span>
+            <span className="text-[10px] uppercase tracking-wider opacity-75 mt-1">Preliminary Assessment</span>
           </div>
         </div>
 

@@ -250,4 +250,12 @@ The specific rules you are enforcing are:
 - Cannot be in floodway, high hazard, flow path, or flood storage.
 - Must not increase flooding elsewhere.
 
+5. Section 10.7 - General Flags (Acid Sulfate Soils):
+- If the property is identified as potentially containing Acid Sulfate Soils:
+  - Class 3 or Class 4: MARK AS COMPLIANT (PASS), but add a note: "Restriction: Cannot dig deeper than 1m".
+  - Class 5: MARK AS COMPLIANT (PASS).
+  - Class 1 or Class 2: MARK AS NON_COMPLIANT (FAIL).
+  - If NO Class is specified: MARK AS NEEDS_CONSULTATION (CHECK) and note "Pass subject to manual check".
+- If NOT identified as containing Acid Sulfate Soils: MARK AS COMPLIANT.
+
 Answer questions based strictly on these rules. If a user asks something outside this scope, answer generally but advise consulting a professional surveyor or certifier. Be concise and professional.`;
