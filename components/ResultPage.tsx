@@ -190,12 +190,16 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Result</p>
-                <p className={`font-bold flex items-center gap-2 ${isCompliant ? 'text-emerald-600' : 'text-red-600'} ${isCompliant && hasChecks ? 'text-sm' : 'text-lg'}`}>
+                <div className={`font-bold flex items-center gap-2 ${isCompliant ? 'text-emerald-600' : 'text-red-600'} ${isCompliant && hasChecks ? 'text-sm' : 'text-lg'}`}>
                   {isCompliant ? <FileCheck size={18} /> : <div className="font-bold">X</div>}
                   {isCompliant
-                    ? (hasChecks ? 'Passed Subject to checks being passed' : 'Pass')
+                    ? (hasChecks ? (
+                      <span>
+                        Passed <span className="bg-yellow-300 text-slate-900 px-1 rounded shadow-sm">SUBJECT TO CHECKS BEING PASSED</span>
+                      </span>
+                    ) : 'Pass')
                     : 'Fail'}
-                </p>
+                </div>
               </div>
             </div>
           </div>
@@ -327,15 +331,15 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
             <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs">
               <div>
                 <span className="block text-slate-400">Owner</span>
-                <span className="font-bold text-slate-900">{metadata?.ownerName || '-'}</span>
+                <span className="font-bold text-slate-900 break-words">{metadata?.ownerName || '-'}</span>
               </div>
               <div>
                 <span className="block text-slate-400">Address</span>
-                <span className="font-bold text-slate-900 truncate">{metadata?.address || '-'}</span>
+                <span className="font-bold text-slate-900 break-words">{metadata?.address || '-'}</span>
               </div>
               <div>
                 <span className="block text-slate-400">Lot / DP</span>
-                <span className="font-bold text-slate-900">{metadata?.lotDp || '-'}</span>
+                <span className="font-bold text-slate-900 break-words">{metadata?.lotDp || '-'}</span>
               </div>
               <div>
                 <span className="block text-slate-400">Type</span>
@@ -350,7 +354,11 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
             {isCompliant ? <CheckCircle size={32} className="mb-2" /> : <div className="text-3xl font-bold mb-2">X</div>}
             <span className={`font-extrabold uppercase tracking-tight text-center ${isCompliant && hasChecks ? 'text-sm' : 'text-xl'}`}>
               {isCompliant
-                ? (hasChecks ? 'Passed Subject to checks being passed' : 'PASSED')
+                ? (hasChecks ? (
+                  <span>
+                    PASSED <span className="bg-yellow-300 text-black px-1 box-decoration-clone">SUBJECT TO CHECKS BEING PASSED</span>
+                  </span>
+                ) : 'PASSED')
                 : 'FAILED'}
             </span>
             <span className="text-[10px] uppercase tracking-wider opacity-75 mt-1">Preliminary Assessment</span>
@@ -376,7 +384,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
         {/* Compliance Details - Compact Table */}
         <div className="space-y-4">
           {categories.map((category) => (
-            <div key={category.id} className="break-inside-avoid">
+            <div key={category.id}>
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 border-b-2 border-slate-100 pb-0.5">
                 {category.title}
               </h4>
@@ -390,7 +398,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {category.items.map((item) => (
-                    <tr key={item.id} className={item.status === ComplianceStatus.NOT_APPLICABLE ? 'text-slate-400' : 'text-slate-800'}>
+                    <tr key={item.id} className={`break-inside-avoid ${item.status === ComplianceStatus.NOT_APPLICABLE ? 'text-slate-400' : 'text-slate-800'}`}>
                       <td className="py-1 px-2 align-top">
                         <span className="font-semibold block">{item.text}</span>
                       </td>
