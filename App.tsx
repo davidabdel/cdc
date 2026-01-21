@@ -91,7 +91,7 @@ export default function App() {
       }
     } catch (error) {
       console.error("Analysis failed", error);
-      alert("Failed to analyze documents. Please ensure your API key is valid.");
+      alert(`Failed to analyze documents. Error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsAnalyzing(false);
     }

@@ -14,6 +14,8 @@ const getAIInstance = (): GoogleGenAI => {
       throw new Error("API Key is missing");
     }
     ai = new GoogleGenAI({ apiKey });
+    console.log("Gemini AI Instance Initialized. Key present:", !!apiKey);
+    console.log("Key length:", apiKey ? apiKey.length : 0);
   }
   return ai;
 };
@@ -21,7 +23,7 @@ const getAIInstance = (): GoogleGenAI => {
 export const initializeChat = async (): Promise<Chat> => {
   const instance = getAIInstance();
   chatSession = instance.chats.create({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-2.0-flash-lite',
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       temperature: 0.7,
@@ -54,13 +56,27 @@ export const analyzeChecklistWithDocuments = async (
 ): Promise<AnalysisResponse | null> => {
   const instance = getAIInstance();
 
+  // Filter out any files that might be problematic (e.g., empty data)
+  const validFiles = files.filter(f => {
+    const parts = f.data.split(',');
+    return parts.length === 2 && parts[1].length > 0;
+  });
+
+  if (validFiles.length === 0) {
+    throw new Error("No valid files to analyze. Please upload valid PDFs or Images.");
+  }
+
   // Prepare the file parts for the API
-  const fileParts = files.map(file => ({
-    inlineData: {
-      mimeType: file.type,
-      data: file.data.split(',')[1] // Remove the data URL prefix (e.g., "data:image/png;base64,")
-    }
-  }));
+  const fileParts = validFiles.map(file => {
+    const base64Data = file.data.split(',')[1];
+    console.log(`Preparing file: ${file.name}, Type: ${file.type}, Size: ${base64Data.length} chars`);
+    return {
+      inlineData: {
+        mimeType: file.type,
+        data: base64Data
+      }
+    };
+  });
 
   // Create a simplified version of the checklist for the AI to understand the structure
   const checklistStructure = currentChecklist.map(cat => ({
@@ -122,7 +138,7 @@ export const analyzeChecklistWithDocuments = async (
 
   try {
     const response = await instance.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash-lite',
       contents: {
         parts: [
           ...fileParts,
@@ -166,8 +182,12 @@ export const analyzeChecklistWithDocuments = async (
       return parsed;
     }
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Document Analysis Error:", error);
-    throw new Error("Failed to analyze documents. Please check file formats (PDF/Image) and try again.");
+    // Throw the original error or a more descriptive one based on the error code
+    if (error.message && error.message.includes("API Key is missing")) {
+      throw new Error("Gemini API Key is missing. Please check your .env.local file.");
+    }
+    throw error;
   }
 };
