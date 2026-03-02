@@ -105,7 +105,24 @@ export const analyzeChecklistWithDocuments = async (
        - If the land is NOT bushfire prone, mark as COMPLIANT.
        - If the land IS bushfire prone, mark as NEEDS_CONSULTATION (or NON_COMPLIANT if strict).
 
-    3. For item 'section_10_7' (General Flags) - Acid Sulfate Soils:
+    3. For item 'sec_10_7_landslide' (Landslide/Landslip Risk):
+       - Look for "Landslide" or "Landslip" in Section 10.7.
+       - If identified as susceptible to landslide risk:
+         - Check if it is identified in an EPI (Environmental Planning Instrument like LEP, SEPP).
+         - For Warringah LEP 2011, check if it's in "Area C" or "Area E" on the Landslip Risk Map.
+         - If in an EPI or Warringah Area C/E, mark as NON_COMPLIANT.
+         - If identified ONLY in a DCP (Development Control Plan) and NOT in an EPI (e.g. "DCP Landslip" but "No" under LEP/EPI), mark as COMPLIANT but add a CRITICAL NOTE: "Required: Geotech report from a Geotech engineer providing recommendations, which must be considered by the structural engineer."
+       - If NOT identified as susceptible to landslide/landslip risk, mark as COMPLIANT.
+
+    4. For item 'sec_sutherland_c4' (Sutherland C4 Zone):
+       - If the land is identified as Zone C4 in Sutherland Shire:
+         - Check for "Natural Landform Map" or "Clause 6.8" restrictions in Section 10.7. If present, mark as NON_COMPLIANT.
+         - Verify Lot Size >= 700sqm.
+         - Summarize standards: Max 450sqm floor area, 7.2m height, 30% coverage, 45% landscape area.
+         - Mention that cut/fill is limited to 600mm.
+       - If NOT in Sutherland C4, mark as NOT_APPLICABLE.
+
+    5. For item 'section_10_7' (General Flags) - Acid Sulfate Soils:
        - Look for "Acid Sulfate Soils" or similar text.
        - If Class 3 or Class 4: Mark as COMPLIANT, but MUST add note: "Restriction: Cannot dig deeper than 1m".
        - If Class 5: Mark as COMPLIANT.

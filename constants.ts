@@ -20,6 +20,20 @@ export const INITIAL_DATA: ChecklistCategory[] = [
         notes: ''
       },
       {
+        id: 'sec_10_7_landslide',
+        text: 'Section 10.7 - Landslide/Landslip Risk',
+        subtext: 'CDC permitted if NOT identified in an EPI (Environmental Planning Instrument) or Warringah LEP (Area C/E).',
+        status: ComplianceStatus.PENDING,
+        notes: ''
+      },
+      {
+        id: 'sec_sutherland_c4',
+        text: 'Sutherland Shire - C4 Zone Check',
+        subtext: 'Min 700sqm, Max 450sqm floor area, 30% coverage. NOT permitted on Natural Landform Map.',
+        status: ComplianceStatus.PENDING,
+        notes: ''
+      },
+      {
         id: 'section_10_7',
         text: 'Section 10.7 - General Flags',
         subtext: 'Check for other flags: Acid Sulfate Soils, Heritage, Biodiversity, etc.',
@@ -257,5 +271,25 @@ The specific rules you are enforcing are:
   - Class 1 or Class 2: MARK AS NON_COMPLIANT (FAIL).
   - If NO Class is specified: MARK AS NEEDS_CONSULTATION (CHECK) and note "Pass subject to manual check".
 - If NOT identified as containing Acid Sulfate Soils: MARK AS COMPLIANT.
+
+6. Landslide / Landslip Risk (Clause 3.2(h)):
+- CDC is NOT permitted on land identified as susceptible to landslide risk in:
+  - (i) An Environmental Planning Instrument (EPI) applying to the land (e.g. LEP, SEPP).
+  - (ii) For Warringah LEP 2011: "Area C" or "Area E" on the Landslip Risk Map.
+- CDC IS PERMITTED if the landslide/landslip risk is ONLY identified in a DCP (Development Control Plan) and NOT in an EPI.
+- If CDC is permitted in a landslide/landslip area (i.e. not in an EPI), MARK AS COMPLIANT but add a CRITICAL NOTE: "Required: Geotech report from a Geotech engineer providing recommendations, which must be considered by the structural engineer."
+
+7. Sutherland Shire C4 Zone (Schedule 3):
+- For land in Zone C4 (Environmental Living):
+  - CDC is NOT PERMITTED if the land is identified on the 'Natural Landform Map' (Cliffs, rock outcrops, etc. per Clause 6.8).
+  - CDC is NOT PERMITTED if the land is an 'Environmentally Sensitive Area' (Clause 3.3).
+  - CDC is NOT PERMITTED in Heritage areas or BAL-40/FZ.
+  - Development Standards:
+    - Min Lot Size: 700sqm.
+    - Max Floor Area: 450sqm (total).
+    - Max Height: 7.2m.
+    - Max Site Coverage: 30%.
+    - Min Landscaped Area: 45%.
+    - Earthworks: Cut/Fill max 600mm. Natural rock outcrops >5sqm must be retained.
 
 Answer questions based strictly on these rules. If a user asks something outside this scope, answer generally but advise consulting a professional surveyor or certifier. Be concise and professional.`;
