@@ -23,7 +23,7 @@ const getAIInstance = (): GoogleGenAI => {
 export const initializeChat = async (): Promise<Chat> => {
   const instance = getAIInstance();
   chatSession = instance.chats.create({
-    model: 'gemini-2.0-flash-lite',
+    model: 'gemini-2.0-flash',
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       temperature: 0.7,
@@ -155,7 +155,7 @@ export const analyzeChecklistWithDocuments = async (
 
   try {
     const response = await instance.models.generateContent({
-      model: 'gemini-2.0-flash-lite',
+      model: 'gemini-2.0-flash',
       contents: {
         parts: [
           ...fileParts,
