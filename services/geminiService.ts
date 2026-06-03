@@ -61,7 +61,7 @@ export const analyzeChecklistWithDocuments = async (
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || \`API returned \${response.status}\`);
+      throw new Error(data.error || `API returned ${response.status}`);
     }
 
     return data as AnalysisResponse;
