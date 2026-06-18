@@ -58,7 +58,13 @@ export const analyzeChecklistWithDocuments = async (
       body: JSON.stringify({ files: validFiles, currentChecklist })
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Server returned non-JSON response (status ${response.status}): ${text.substring(0, 300)}`);
+    }
 
     if (!response.ok) {
       throw new Error(data.error || `API returned ${response.status}`);

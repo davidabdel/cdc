@@ -154,6 +154,6 @@ export default async function handler(req: any, res: any) {
     if (error.message && error.message.includes("API Key is missing")) {
       return res.status(500).json({ error: "Gemini API Key is missing. Please check Vercel environment variables." });
     }
-    return res.status(500).json({ error: 'An error occurred during document analysis.' });
+    return res.status(500).json({ error: error?.message || 'An error occurred during document analysis.' });
   }
 }
