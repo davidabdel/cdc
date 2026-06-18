@@ -1,9 +1,9 @@
 {
   "functions": {
-    "api/analyze.ts": {
+    "api/analyze.js": {
       "maxDuration": 60
     },
-    "api/chat.ts": {
+    "api/chat.js": {
       "maxDuration": 30
     }
   }
