@@ -1,6 +1,6 @@
-import { ComplianceStatus } from '../types';
-
 export const maxDuration = 60;
+
+const COMPLIANCE_STATUS_VALUES = ['PENDING', 'COMPLIANT', 'NON_COMPLIANT', 'NOT_APPLICABLE', 'NEEDS_CONSULTATION'];
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -61,7 +61,7 @@ export default async function handler(req: any, res: any) {
          - Check if it is identified in an EPI (Environmental Planning Instrument like LEP, SEPP).
          - For Warringah LEP 2011, check if it's in "Area C" or "Area E" on the Landslip Risk Map.
          - If in an EPI or Warringah Area C/E, mark as NON_COMPLIANT.
-         - If identified ONLY in a DCP (Development Control Plan) and NOT in an EPI (e.g. "DCP Landslip" but "No" under LEP/EPI), mark as COMPLIANT but add a CRITICAL NOTE: "Required: Geotech report from a Geotech engineer providing recommendations, which must be considered by the structural engineer."
+         - If identified ONLY in a DCP (Development Control Plan) and NOT in an EPI, mark as COMPLIANT but add a CRITICAL NOTE: "Required: Geotech report from a Geotech engineer providing recommendations, which must be considered by the structural engineer."
        - If NOT identified as susceptible to landslide/landslip risk, mark as COMPLIANT.
 
     4. For item 'sec_sutherland_c4' (Sutherland C4 Zone):
@@ -80,7 +80,7 @@ export default async function handler(req: any, res: any) {
        - If identified as containing Acid Sulfate Soils but NO Class is specified: Mark as NEEDS_CONSULTATION and note "Pass subject to manual check".
        - If NOT identified as containing Acid Sulfate Soils: Mark as COMPLIANT (unless other flags exist).
 
-    4. For item '88b' (88b Restrictions):
+    6. For item '88b' (88b Restrictions):
        - If the 88b instrument lists restrictions (e.g. "Restrictions on the Use of Land"), you MUST extract the text/description of each relevant restriction.
        - Do NOT just list the item numbers (e.g. "Items 12, 14").
        - Format as: "Item [Number]: [Brief Description of Restriction]".
@@ -93,7 +93,7 @@ export default async function handler(req: any, res: any) {
     3. Provide a clear "note" citing the specific evidence found.
 
     Formatting Rules for "notes":
-    - If multiple pieces of evidence exist or you need to explain reasoning, use a multi-line format with bullet points (e.g., "- Evidence A\n- Evidence B").
+    - If multiple pieces of evidence exist or you need to explain reasoning, use a multi-line format with bullet points.
     - Keep the lines concise so they are easy to read.
     - Reference specific page numbers or drawing numbers where possible (e.g. "Plan A01").
 
@@ -132,7 +132,7 @@ export default async function handler(req: any, res: any) {
                 type: 'OBJECT',
                 properties: {
                   id: { type: 'STRING' },
-                  status: { type: 'STRING', enum: Object.values(ComplianceStatus) },
+                  status: { type: 'STRING', enum: COMPLIANCE_STATUS_VALUES },
                   notes: { type: 'STRING' }
                 },
                 required: ['id', 'status', 'notes']
@@ -153,7 +153,7 @@ export default async function handler(req: any, res: any) {
       }
     );
 
-    const geminiData = await geminiRes.json();
+    const geminiData: any = await geminiRes.json();
 
     if (!geminiRes.ok) {
       const errMsg = geminiData?.error?.message || `Gemini API error ${geminiRes.status}`;
