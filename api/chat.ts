@@ -22,7 +22,7 @@ export default async function handler(req: any, res: any) {
     }));
 
     const chatSession = ai.chats.create({
-      model: 'gemini-3.1-flash-lite',
+      model: 'gemini-2.5-flash',
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.7,
