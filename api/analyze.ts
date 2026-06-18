@@ -1,7 +1,6 @@
-import { GoogleGenAI, Type } from '@google/genai';
 import { ComplianceStatus } from '../types';
 
-export const maxDuration = 60; // Allow up to 60 seconds for Vercel Serverless Function since AI analysis can be slow
+export const maxDuration = 60;
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -10,14 +9,16 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { files, currentChecklist } = req.body;
-    
+
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'Files are required' });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
-    // Create a simplified version of the checklist for the AI to understand the structure
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'Gemini API Key is missing. Please check Vercel environment variables.' });
+    }
+
     const checklistStructure = currentChecklist.map((cat: any) => ({
       category: cat.title,
       items: cat.items.map((item: any) => ({
@@ -28,29 +29,28 @@ export default async function handler(req: any, res: any) {
     }));
 
     const fileParts = files.map((file: any) => {
-      // The frontend sends base64 with the data: prefix, we need to strip it if present
       const base64Data = file.data.includes(',') ? file.data.split(',')[1] : file.data;
       return {
-        inlineData: {
-          mimeType: file.type,
+        inline_data: {
+          mime_type: file.type,
           data: base64Data
         }
       };
     });
 
     const prompt = `
-    You are an expert NSW CDC Certifier. 
+    You are an expert NSW CDC Certifier.
     I have uploaded architectural plans, Section 10.7 certificates, Title Searches or other project documents.
-    
+
     Your task is twofold:
     1. Extract Project Metadata: Find the Owner's Name, Property Address, and Lot/DP details (usually on the Title Search or Section 10.7).
     2. Review Compliance: Cross-reference the documents against the following Checklist Structure.
-    
+
     CRITICAL RULES FOR SECTION 10.7 CERTIFICATES:
-    1. For item 'sec_10_7_complying_dev': Look specifically for the phrase "may be carried out" in relation to Complying Development under codes like Housing Code, Low Rise Housing Diversity Code, etc. 
-       - If the document says it "may be carried out", mark as COMPLIANT. 
+    1. For item 'sec_10_7_complying_dev': Look specifically for the phrase "may be carried out" in relation to Complying Development under codes like Housing Code, Low Rise Housing Diversity Code, etc.
+       - If the document says it "may be carried out", mark as COMPLIANT.
        - If it says "may not be carried out", mark as NON_COMPLIANT.
-    
+
     2. For item 'sec_10_7_bushfire': Look specifically for the phrase "None of the land is bushfire prone land" or "NO" next to Bushfire Prone Land.
        - If the land is NOT bushfire prone, mark as COMPLIANT.
        - If the land IS bushfire prone, mark as NEEDS_CONSULTATION (or NON_COMPLIANT if strict).
@@ -86,74 +86,90 @@ export default async function handler(req: any, res: any) {
        - Format as: "Item [Number]: [Brief Description of Restriction]".
        - Example: "Item 12: No fence to be erected within the easement area."
        - If there are many, summarize the key ones relevant to development (easements, building zones, etc.).
-    
+
     For each item in the checklist:
     1. Search the documents for evidence (e.g., setbacks shown on plans, zoning on certificate).
     2. Determine the status: COMPLIANT, NON_COMPLIANT, NEEDS_CONSULTATION (if ambiguous or missing info), or NOT_APPLICABLE.
     3. Provide a clear "note" citing the specific evidence found.
-    
+
     Formatting Rules for "notes":
     - If multiple pieces of evidence exist or you need to explain reasoning, use a multi-line format with bullet points (e.g., "- Evidence A\n- Evidence B").
     - Keep the lines concise so they are easy to read.
     - Reference specific page numbers or drawing numbers where possible (e.g. "Plan A01").
-    
+
     Checklist Structure to Fill:
     ${JSON.stringify(checklistStructure, null, 2)}
-    
+
     Return the data as a JSON Object containing "metadata" and "results".
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: {
-        parts: [
-          ...fileParts,
-          { text: prompt }
-        ]
-      },
-      config: {
-        responseMimeType: "application/json",
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            ...fileParts,
+            { text: prompt }
+          ]
+        }
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
         responseSchema: {
-          type: Type.OBJECT,
+          type: 'OBJECT',
           properties: {
             metadata: {
-              type: Type.OBJECT,
+              type: 'OBJECT',
               properties: {
-                ownerName: { type: Type.STRING, description: "Name of the property owner(s)" },
-                address: { type: Type.STRING, description: "Full property address" },
-                lotDp: { type: Type.STRING, description: "Lot and DP/SP number (e.g. Lot 1 DP 123456)" }
+                ownerName: { type: 'STRING', description: 'Name of the property owner(s)' },
+                address: { type: 'STRING', description: 'Full property address' },
+                lotDp: { type: 'STRING', description: 'Lot and DP/SP number (e.g. Lot 1 DP 123456)' }
               },
-              required: ["ownerName", "address", "lotDp"]
+              required: ['ownerName', 'address', 'lotDp']
             },
             results: {
-              type: Type.ARRAY,
+              type: 'ARRAY',
               items: {
-                type: Type.OBJECT,
+                type: 'OBJECT',
                 properties: {
-                  id: { type: Type.STRING },
-                  status: { type: Type.STRING, enum: Object.values(ComplianceStatus) },
-                  notes: { type: Type.STRING }
+                  id: { type: 'STRING' },
+                  status: { type: 'STRING', enum: Object.values(ComplianceStatus) },
+                  notes: { type: 'STRING' }
                 },
-                required: ["id", "status", "notes"]
+                required: ['id', 'status', 'notes']
               }
             }
           },
-          required: ["metadata", "results"]
+          required: ['metadata', 'results']
         }
       }
-    });
+    };
 
-    if (response.text) {
-      const parsed = JSON.parse(response.text);
-      return res.status(200).json(parsed);
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      }
+    );
+
+    const geminiData = await geminiRes.json();
+
+    if (!geminiRes.ok) {
+      const errMsg = geminiData?.error?.message || `Gemini API error ${geminiRes.status}`;
+      return res.status(500).json({ error: errMsg });
     }
-    
-    return res.status(500).json({ error: 'Failed to generate response' });
+
+    const text = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      return res.status(500).json({ error: 'No content returned from Gemini', raw: geminiData });
+    }
+
+    const parsed = JSON.parse(text);
+    return res.status(200).json(parsed);
+
   } catch (error: any) {
-    console.error("Document Analysis Error:", error);
-    if (error.message && error.message.includes("API Key is missing")) {
-      return res.status(500).json({ error: "Gemini API Key is missing. Please check Vercel environment variables." });
-    }
+    console.error('Document Analysis Error:', error);
     return res.status(500).json({ error: error?.message || 'An error occurred during document analysis.' });
   }
 }
