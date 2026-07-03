@@ -54,7 +54,19 @@ CRITICAL RULES FOR SECTION 10.7 CERTIFICATES:
 5. For item 'section_10_7' Acid Sulfate Soils: Class 3/4 = COMPLIANT + "Cannot dig deeper than 1m". Class 5 = COMPLIANT. Class 1/2 = NON_COMPLIANT. No class = NEEDS_CONSULTATION. None found = COMPLIANT.
 6. For item '88b': Extract full description of each restriction. Format: "Item [Number]: [Description]".
 
-For each checklist item: determine COMPLIANT, NON_COMPLIANT, NEEDS_CONSULTATION, or NOT_APPLICABLE. Provide evidence-based notes citing page/drawing numbers.
+CRITICAL RULES FOR POOL SITING (Site Plans / Architectural Plans):
+7. TERMINOLOGY: A "spa pool", "swim spa", "above-ground spa", "plunge pool" or "swim gym" IS a swimming pool. Every pool siting rule applies equally to spas. Never treat a spa as exempt from the building line rule.
+8. For item 'pool_building_line' — THIS IS THE MOST COMMON ERROR SOURCE. Follow this procedure strictly:
+   a. First identify the PRIMARY ROAD BOUNDARY (the front boundary) of the lot. Evidence to look for: the named street, road pavement, footpath, kerb, driveway crossover, parked cars on the street, front doors of neighbouring dwellings. Your notes MUST state which boundary you identified as the front and what evidence supports it.
+   b. The BUILDING LINE is the line of the dwelling wall that is closest to and faces the primary road.
+   c. If ANY part of the pool/spa sits between the dwelling's front wall and the primary road boundary (i.e. in the front yard, forward of the building line), the item is NON_COMPLIANT. The note MUST begin with: "DA REQUIRED: The pool/spa is located forward of the building line. This development cannot be approved as a CDC."
+   d. Only return COMPLIANT if the pool/spa is clearly and entirely behind the front building line AND you have identified the front boundary per (a).
+   e. If you cannot determine the plan orientation, street location or building line with certainty, return NEEDS_CONSULTATION with the note "Manual check required: front boundary / building line could not be confidently determined from the plans."
+   f. DO NOT assume the pool is in the rear yard. Aerial-photo site plans frequently show pools/spas proposed in FRONT yards. A setback dimension (e.g. "4.65m") does not tell you whether that boundary is the front or rear — verify against the road location.
+9. For item 'pool_secondary_road' (corner lots): the pool setback from the secondary road must be >= the dwelling's setback from that road. If closer, NON_COMPLIANT with a note beginning "DA REQUIRED:".
+10. For item 'pool_heritage': in a heritage conservation area the pool/spa must be behind the REAR building line and no closer to side boundaries than the dwelling. If not, NON_COMPLIANT with a note beginning "DA REQUIRED:".
+
+For each checklist item: determine COMPLIANT, NON_COMPLIANT, NEEDS_CONSULTATION, or NOT_APPLICABLE. Provide evidence-based notes citing page/drawing numbers. Do not guess: if the documents do not contain enough evidence to decide an item, return NEEDS_CONSULTATION rather than COMPLIANT.
 
 Checklist Structure:
 ${JSON.stringify(checklistStructure, null, 2)}
@@ -71,6 +83,7 @@ Return JSON with "metadata" and "results".`;
         }
       ],
       generationConfig: {
+        temperature: 0,
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'OBJECT',
@@ -103,7 +116,7 @@ Return JSON with "metadata" and "results".`;
     };
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || 'gemini-2.5-pro'}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

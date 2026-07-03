@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChecklistCategory, ComplianceStatus, ProjectMetadata } from '../types';
-import { CheckCircle, Printer, ArrowLeft, Building, Calendar, FileCheck, User, MapPin, Hash, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Printer, ArrowLeft, Building, Calendar, FileCheck, User, MapPin, Hash, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface ResultPageProps {
   categories: ChecklistCategory[];
@@ -39,41 +39,52 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
     };
   }, [metadata]);
 
-  // Calculate overall compliance
-  const criticalChecks = [
+  // Items whose failure means the CDC pathway itself is unavailable — the
+  // project must instead be lodged as a Development Application (DA).
+  const DA_REQUIRED_CHECKS = [
     'sec_10_7_complying_dev',
-    'sec_10_7_bushfire',
-    'lot_size_normal',
     'zoning_check',
-    'flood_info',
-    'section_10_7'
+    'strata',
+    'pool_building_line',
+    'pool_secondary_road',
+    'pool_heritage',
+    'easement'
   ];
 
-  const failedChecks = React.useMemo(() => {
-    const failures: { id: string; text: string; reason: string }[] = [];
+  // Siting checks that must be positively confirmed (COMPLIANT) before the
+  // report may display a pass — a PENDING or CHECK status here blocks approval.
+  const MUST_BE_CONFIRMED = ['pool_building_line'];
 
-    categories.forEach(cat => {
-      cat.items.forEach(item => {
-        if (criticalChecks.includes(item.id) && item.status === ComplianceStatus.NON_COMPLIANT) {
-          failures.push({
-            id: item.id,
-            text: item.text,
-            reason: item.notes || 'Requirement not met'
-          });
-        }
-      });
-    });
+  const allItems = React.useMemo(
+    () => categories.flatMap(cat => cat.items),
+    [categories]
+  );
 
-    return failures;
-  }, [categories]);
+  // ANY non-compliant item fails the report, not just a whitelist.
+  const failedChecks = React.useMemo(
+    () => allItems
+      .filter(item => item.status === ComplianceStatus.NON_COMPLIANT)
+      .map(item => ({
+        id: item.id,
+        text: item.text,
+        reason: item.notes || 'Requirement not met'
+      })),
+    [allItems]
+  );
+
+  const daFailures = failedChecks.filter(f => DA_REQUIRED_CHECKS.includes(f.id));
+  const requiresDA = daFailures.length > 0;
 
   const isCompliant = failedChecks.length === 0;
 
+  // Unresolved items (awaiting assessment or manual consultation) prevent a clean pass.
   const hasChecks = React.useMemo(() => {
-    return categories.some(cat =>
-      cat.items.some(item => item.status === ComplianceStatus.NEEDS_CONSULTATION)
+    const unresolved = allItems.some(item =>
+      item.status === ComplianceStatus.NEEDS_CONSULTATION ||
+      (item.status === ComplianceStatus.PENDING && MUST_BE_CONFIRMED.includes(item.id))
     );
-  }, [categories]);
+    return unresolved;
+  }, [allItems]);
 
   return (
     <>
@@ -116,18 +127,50 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
           {/* Report Header */}
           <div className="text-center mb-10">
             <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-6 ring-8 ring-opacity-50
-              ${isCompliant ? 'bg-emerald-100 text-emerald-600 ring-emerald-50' : 'bg-red-100 text-red-600 ring-red-50'}`}>
-              {isCompliant ? (
-                <CheckCircle size={64} />
-              ) : (
+              ${!isCompliant ? 'bg-red-100 text-red-600 ring-red-50' :
+                hasChecks ? 'bg-amber-100 text-amber-600 ring-amber-50' :
+                  'bg-emerald-100 text-emerald-600 ring-emerald-50'}`}>
+              {!isCompliant ? (
                 <div className="text-6xl font-bold">X</div>
+              ) : hasChecks ? (
+                <AlertTriangle size={64} />
+              ) : (
+                <CheckCircle size={64} />
               )}
             </div>
-            <h1 className={`text-4xl font-extrabold mb-2 tracking-tight ${isCompliant ? 'text-slate-900' : 'text-red-600'}`}>
-              {isCompliant ? 'CDC APPROVED' : 'CDC NOT PASSED'}
+            <h1 className={`text-4xl font-extrabold mb-2 tracking-tight
+              ${!isCompliant ? 'text-red-600' : hasChecks ? 'text-amber-600' : 'text-slate-900'}`}>
+              {requiresDA ? 'DA REQUIRED — NOT CDC ELIGIBLE'
+                : !isCompliant ? 'CDC NOT PASSED'
+                  : hasChecks ? 'SUBJECT TO MANUAL CHECKS'
+                    : 'CDC APPROVED'}
             </h1>
             <p className="text-xl text-slate-500 font-medium">Preliminary Compliance Assessment</p>
           </div>
+
+          {/* DA Required Alert */}
+          {requiresDA && (
+            <div className="mb-8 rounded-xl border-2 border-red-500 bg-red-50 p-6">
+              <div className="flex items-start gap-4">
+                <AlertTriangle size={32} className="text-red-600 shrink-0" />
+                <div>
+                  <h3 className="text-lg font-extrabold text-red-800 uppercase tracking-wide mb-2">
+                    This application cannot proceed as Complying Development
+                  </h3>
+                  <p className="text-sm text-red-800 mb-3">
+                    One or more gateway requirements have failed. A Development Application (DA) to council is required for this project.
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-red-900 space-y-1">
+                    {daFailures.map(fail => (
+                      <li key={fail.id}>
+                        <span className="font-bold">{fail.text}:</span> {fail.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Customer / Project Details */}
           {metadata && (
@@ -190,15 +233,17 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Result</p>
-                <div className={`font-bold flex items-center gap-2 ${isCompliant ? 'text-emerald-600' : 'text-red-600'} ${isCompliant && hasChecks ? 'text-sm' : 'text-lg'}`}>
-                  {isCompliant ? <FileCheck size={18} /> : <div className="font-bold">X</div>}
-                  {isCompliant
-                    ? (hasChecks ? (
+                <div className={`font-bold flex items-center gap-2
+                  ${!isCompliant ? 'text-red-600' : hasChecks ? 'text-amber-600' : 'text-emerald-600'}
+                  ${isCompliant && hasChecks ? 'text-sm' : 'text-lg'}`}>
+                  {!isCompliant ? <div className="font-bold">X</div> : isCompliant && hasChecks ? <AlertTriangle size={18} /> : <FileCheck size={18} />}
+                  {!isCompliant
+                    ? (requiresDA ? 'Fail — DA Required' : 'Fail')
+                    : hasChecks ? (
                       <span>
-                        Passed <span className="bg-yellow-300 text-slate-900 px-1 rounded shadow-sm">SUBJECT TO CHECKS BEING PASSED</span>
+                        <span className="bg-yellow-300 text-slate-900 px-1 rounded shadow-sm">NOT YET PASSED — SUBJECT TO CHECKS</span>
                       </span>
-                    ) : 'Pass')
-                    : 'Fail'}
+                    ) : 'Pass'}
                 </div>
               </div>
             </div>
@@ -349,21 +394,41 @@ export const ResultPage: React.FC<ResultPageProps> = ({ categories, onBack, proj
           </div>
 
           {/* Right: Result */}
-          <div className={`w-1/3 rounded-lg p-4 flex flex-col items-center justify-center border-2 
-              ${isCompliant ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'}`}>
-            {isCompliant ? <CheckCircle size={32} className="mb-2" /> : <div className="text-3xl font-bold mb-2">X</div>}
-            <span className={`font-extrabold uppercase tracking-tight text-center ${isCompliant && hasChecks ? 'text-sm' : 'text-xl'}`}>
-              {isCompliant
-                ? (hasChecks ? (
+          <div className={`w-1/3 rounded-lg p-4 flex flex-col items-center justify-center border-2
+              ${!isCompliant ? 'bg-red-50 border-red-500 text-red-800' :
+                hasChecks ? 'bg-amber-50 border-amber-500 text-amber-800' :
+                  'bg-emerald-50 border-emerald-500 text-emerald-800'}`}>
+            {!isCompliant ? <div className="text-3xl font-bold mb-2">X</div> :
+              hasChecks ? <AlertTriangle size={32} className="mb-2" /> :
+                <CheckCircle size={32} className="mb-2" />}
+            <span className={`font-extrabold uppercase tracking-tight text-center ${(isCompliant && hasChecks) || requiresDA ? 'text-sm' : 'text-xl'}`}>
+              {!isCompliant
+                ? (requiresDA ? 'FAILED — DA REQUIRED' : 'FAILED')
+                : hasChecks ? (
                   <span>
-                    PASSED <span className="bg-yellow-300 text-black px-1 box-decoration-clone">SUBJECT TO CHECKS BEING PASSED</span>
+                    <span className="bg-yellow-300 text-black px-1 box-decoration-clone">NOT YET PASSED — SUBJECT TO CHECKS</span>
                   </span>
-                ) : 'PASSED')
-                : 'FAILED'}
+                ) : 'PASSED'}
             </span>
             <span className="text-[10px] uppercase tracking-wider opacity-75 mt-1">Preliminary Assessment</span>
           </div>
         </div>
+
+        {/* DA Required Alert (Print) */}
+        {requiresDA && (
+          <div className="mb-6 border-2 border-red-500 bg-red-50 rounded-lg p-3">
+            <h3 className="text-sm font-extrabold text-red-700 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span>!</span> DA REQUIRED — This application cannot proceed as Complying Development
+            </h3>
+            <ul className="list-disc list-inside text-xs text-red-900 space-y-1">
+              {daFailures.map(fail => (
+                <li key={fail.id}>
+                  <span className="font-bold">{fail.text}:</span> {fail.reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Failed Reasons (if any) */}
         {!isCompliant && (

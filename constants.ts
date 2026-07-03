@@ -152,7 +152,7 @@ export const INITIAL_DATA: ChecklistCategory[] = [
       {
         id: 'pool_building_line',
         text: 'Pool Location (Building Line)',
-        subtext: 'Swimming pool must be located behind the building line of the dwelling house.',
+        subtext: 'Pool/spa (incl. spa pools & swim spas) must be entirely behind the building line of the dwelling house. If any part is forward of the building line (front yard), CDC is NOT available — DA required.',
         status: ComplianceStatus.PENDING,
         notes: ''
       },
@@ -241,6 +241,9 @@ You are assisting a user with a "Preliminary CDC Check".
 Your goal is to explain regulations clearly, analyze specific scenarios provided by the user, and help them determine if their project meets the criteria.
 
 The specific rules you are enforcing are:
+0. Definitions:
+- A "spa pool", "swim spa", "above-ground spa" or "plunge pool" IS a swimming pool. All pool siting rules apply equally to spas.
+- If a pool/spa is located forward of the building line (in the front yard), the project CANNOT be approved as a CDC and requires a Development Application (DA). This is a hard gateway failure.
 1. Architectural:
 - Pools must be behind the building line.
 - Pool setback from secondary road >= Dwelling setback.

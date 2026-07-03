@@ -107,22 +107,9 @@ export default function App() {
     linkElement.click();
   };
 
-  // Logic to determine if "CDC Approved" report is available
-  // Requirements: 
-  // 1. sec_10_7_complying_dev = COMPLIANT
-  // 2. sec_10_7_bushfire = COMPLIANT
-  // 3. lot_size_normal = COMPLIANT
-  // 4. zoning_check = COMPLIANT
-  // 5. flood_info = COMPLIANT
-
-  // Logic to determine if "CDC Approved" report is available
-  // Requirements: 
-  // 1. sec_10_7_complying_dev = COMPLIANT
-  // 2. sec_10_7_bushfire = COMPLIANT
-  // 3. lot_size_normal = COMPLIANT
-  // 4. zoning_check = COMPLIANT
-  // 5. flood_info = COMPLIANT
-
+  // The report is only available once every gateway item has been assessed.
+  // pool_building_line is included because a pool/spa forward of the building
+  // line makes the project ineligible for CDC entirely (DA required).
   const canShowResultPage = React.useMemo(() => {
     const findStatus = (id: string) => {
       for (const cat of visibleCategories) {
@@ -137,7 +124,8 @@ export default function App() {
       'sec_10_7_bushfire',
       'lot_size_normal',
       'zoning_check',
-      'flood_info'
+      'flood_info',
+      'pool_building_line'
     ];
 
     // Show report if all critical items have been assessed (i.e., not PENDING)
